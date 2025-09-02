@@ -1,4 +1,4 @@
-# 🛡️ GuardLens - On-Device Multi-Agent System for Behavior-Based Anomaly & Fraud Detection
+# GuardLens - On-Device Multi-Agent System for Behavior-Based Anomaly & Fraud Detection
 
 > **Privacy-First, Real-Time Behavioral Analysis System That Never Compromises Your Data**
 
