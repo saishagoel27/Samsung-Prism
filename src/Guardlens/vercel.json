@@ -1,0 +1,120 @@
+{
+  "name": "secureai",
+  "version": 2,
+  "description": "Enterprise-Grade Multi-Agent Fraud Detection System",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/fraud-detection",
+      "destination": "/detection",
+      "permanent": true
+    },
+    {
+      "source": "/ai-agents",
+      "destination": "/agents",
+      "permanent": true
+    },
+    {
+      "source": "/ml-models",
+      "destination": "/models",
+      "permanent": true
+    },
+    {
+      "source": "/security",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/reports",
+      "destination": "/analytics",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/health",
+      "destination": "/api/health/route"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_APP_NAME": "SecureAI",
+    "NEXT_PUBLIC_APP_VERSION": "2.0.0",
+    "NEXT_PUBLIC_APP_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
+  "regions": ["iad1", "sfo1"],
+  "github": {
+    "silent": true
+  }
+}

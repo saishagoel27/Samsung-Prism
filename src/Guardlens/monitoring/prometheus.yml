@@ -1,0 +1,300 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+# Alerting rules
+rule_files:
+  - "rules/*.yml"
+
+# Alert manager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Recording rules
+recording_rules:
+  - record: job:http_requests_total:rate5m
+    expr: rate(http_requests_total[5m])
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+
+  # SecureAI Application
+  - job_name: 'secureai-app'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    honor_labels: true
+    metrics_path: '/api/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    honor_labels: true
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+
+  # Node Exporter (if running)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+
+  # PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # Elasticsearch
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
+    scrape_interval: 30s
+
+  # Nginx
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 30s
+
+  # Docker
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['docker-exporter:9323']
+    scrape_interval: 30s
+
+  # Blackbox exporter for external monitoring
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - https://secureai.dev
+        - https://api.secureai.dev
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Custom metrics for SecureAI
+  - job_name: 'secureai-custom'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/custom-metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_(.+)'
+        target_label: metric_name
+        replacement: '${1}'
+      - source_labels: [__name__]
+        regex: 'secureai_agent_(.+)'
+        target_label: agent_type
+        replacement: '${1}'
+      - source_labels: [__name__]
+        regex: 'secureai_detection_(.+)'
+        target_label: detection_type
+        replacement: '${1}'
+
+  # Health checks
+  - job_name: 'secureai-health'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/health'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_health_(.+)'
+        target_label: health_check
+        replacement: '${1}'
+
+  # Performance metrics
+  - job_name: 'secureai-performance'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/performance'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_performance_(.+)'
+        target_label: performance_metric
+        replacement: '${1}'
+
+  # Security metrics
+  - job_name: 'secureai-security'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/security'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_security_(.+)'
+        target_label: security_metric
+        replacement: '${1}'
+
+  # Agent performance metrics
+  - job_name: 'secureai-agents'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/agents/metrics'
+    scrape_interval: 20s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_agent_(.+)'
+        target_label: agent_metric
+        replacement: '${1}'
+      - source_labels: [agent_type]
+        target_label: agent_type
+
+  # Detection engine metrics
+  - job_name: 'secureai-detection'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/detection/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_detection_(.+)'
+        target_label: detection_metric
+        replacement: '${1}'
+      - source_labels: [detection_type]
+        target_label: detection_type
+
+  # Privacy and compliance metrics
+  - job_name: 'secureai-privacy'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/privacy/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_privacy_(.+)'
+        target_label: privacy_metric
+        replacement: '${1}'
+
+  # Analytics and reporting metrics
+  - job_name: 'secureai-analytics'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/analytics/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_analytics_(.+)'
+        target_label: analytics_metric
+        replacement: '${1}'
+
+  # ML model metrics
+  - job_name: 'secureai-ml-models'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/models/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_model_(.+)'
+        target_label: model_metric
+        replacement: '${1}'
+      - source_labels: [model_type]
+        target_label: model_type
+
+  # System resource metrics
+  - job_name: 'secureai-system'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/system/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_system_(.+)'
+        target_label: system_metric
+        replacement: '${1}'
+      - source_labels: [resource_type]
+        target_label: resource_type
+
+  # Business metrics
+  - job_name: 'secureai-business'
+    static_configs:
+      - targets: ['secureai-app:3000']
+    metrics_path: '/api/business/metrics'
+    scrape_interval: 300s
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_business_(.+)'
+        target_label: business_metric
+        replacement: '${1}'
+      - source_labels: [business_unit]
+        target_label: business_unit
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus
+    retention:
+      time: 30d
+      size: 50GB
+    wal:
+      retention:
+        time: 2h
+        size: 10GB
+
+# Remote write configuration (for long-term storage)
+remote_write:
+  - url: "http://remote-storage:9201/api/v1/write"
+    remote_timeout: 30s
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'secureai_.*'
+        action: keep
+
+# Remote read configuration
+remote_read:
+  - url: "http://remote-storage:9201/api/v1/read"
+    remote_timeout: 30s
+    read_recent: true
+
